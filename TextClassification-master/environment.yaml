@@ -1,0 +1,11 @@
+name: text_clf
+channels:
+  - defaults
+dependencies:
+  - python=3.7
+  - scikit-learn>0.19.0
+  - pip
+  - pip:
+    - tensorflow==1.15.0
+    - numpy<1.19
+
