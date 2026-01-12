@@ -1,0 +1,185 @@
+git clone --recurse-submodules https://github.com/kilakila-nige/RNSA.git
+git clone --recurse-submodules https://github.com/Tencent-Hunyuan/Hunyuan3D-2.git
+git clone --recurse-submodules https://github.com/HAKUKA503/AI-Enabled-Intelligent-Identification-and-Parameter-Optimization-for-Control-Systems.git
+cd TRELLIS
+conda create -n trellis python=3.10
+conda activate trellis 
+###清华镜像网站 -i https://pypi.tuna.tsinghua.edu.cn/simple 
+
+pip install torch==2.5.1 torchvision --index-url=https://download.pytorch.org/whl/cu118
+pip install xformers==0.0.28.post3 --index-url=https://download.pytorch.org/whl/cu118
+pip install pillow imageio imageio-ffmpeg tqdm easydict opencv-python-headless scipy ninja rembg onnxruntime trimesh xatlas pyvista pymeshfix igraph transformers 
+
+pip install git+https://github.com/EasternJournalist/utils3d.git@9a4eb15e4021b67b12c460c7057d642626897ec8 -i https://pypi.tuna.tsinghua.edu.cn/simple 
+pip install https://github.com/Dao-AILab/flash-attention/releases/download/v2.5.1.post1/flash_attn-2.5.1.post1+cu12torch2.5cxx11abiFALSE-cp310-cp310-linux_x86_64.whl
+pip install kaolin -f https://nviiiidia-kaolin.s3.us-east-2.amazonaws.com/torch-2.5.1_cu118.html
+
+git clone https://github.com/NVlabs/nvdiffrast.git ./tmp/extensions/nvdiffrast -i https://pypi.tuna.tsinghua.edu.cn/simple 
+pip install ./tmp/extensions/nvdiffrast
+
+git clone --recurse-submodules https://github.com/JeffreyXiang/diffoctreerast.git ./tmp/extensions/diffoctreerast
+pip install ./tmp/extensions/diffoctreerast
+
+git clone https://github.com/autonomousvision/mip-splatting.git ./tmp/extensions/mip-splatting
+pip install ./tmp/extensions/mip-splatting/submodules/diff-gaussian-rasterization/
+
+cp -r ./extensions/vox2seq ./tmp/extensions/vox2seq
+pip install ./tmp/extensions/vox2seq
+
+pip install spconv-cu118
+pip install gradio==4.44.1 gradio_litmodel3d==0.0.1
+
+set ATTN_BACKEND=flash-attn
+set SPCONV_ALGO=native
+python ./app.py
+把这些改成与cuda11.8兼容的版本
+ssh -p 25739 root@connect.bjc1.seetacloud.com
+Sv7+n34xZh90
+python plot_train_loss.py
+/root/autodl-tmp/TRELLIS/train_dpo_conv.py
+
+huggingface的网络配置问题：
+配置镜像就好了！！！！！！
+export HF_ENDPOINT=https://hf-mirror.com
+
+
+
+读当前脚本，当前脚本是对应提示词对应的图片的ranking文件，/root/autodl-tmpDrewardDB对应的图片文件在这个文件下，举个例子，/root/autodl-tmp/3DrewardDB/0这个文件夹0代码json文件中的“0”，即prompt的编号，下面有名字例如0_0,0_1,0_2,0_3,1_0,1_1,1_2,1_3,,,的png图片，图片名字的第一个数字代表图片的编号，但不是排序，排序的顺序对应的是json文件中“rank”的内容，而图片名称的第一个数字对应的“rank”内容中的数字，图片名的第二个数字指的是4视角的编号的意思。能帮我编一个生成json文件的代码对应文件提示词和ranking数据的图片吗？代码写入/root/autodl-tmp/TRELLIS/ranking_prompt_img.py
+
+对当前的生成文件进行修改，根据/root/autodl-tmp/TRELLIS/prompt_image_ranking_mapping.json，只对对应4视角图片生成一个mesh的3d文件，只生成mesh文件，存到一个文件夹下，渲染的视频存到另一个文件夹下。并实现对rank排名第0好与第8好，第1好与第7好，第2好与第6好，第3好与第4好的组合的查询方式
+
+
+
+
+
+解释当前文件的功能，是不是读取1000个json文件，对每一个prompt的9组样本的4视角的图片生成一个mesh模型，并渲染视频？
+
+修改这个文件，替换prompt和正负样本对，完成训练。根据metadata的文件，将prompt和正负样本对替换为prompt_rank_map.json文件的对应关系，对prompt_0至prompt_500的rank样本，实现对rank排名第0好与第8好，第1好与第7好，第2好与第6好，第3好与第5好的组合，缺少的最好则跳过
+备份：
+cp /root/autodl-tmp/TRELLIS/TRELLIS-text-xlarge/ckpts/slat_flow_txt_dit_XL_64l8p2_fp16.safetensors /root/autodl-tmp/TRELLIS/TRELLIS-text-xlarge/ckpts/slat_flow_txt_dit_XL_64l8p2_fp16.safetensors.backup
+
+替换模型的代码：
+cp /root/autodl-tmp/TRELLIS/final_slat_model_multi_epoch.safetensors /root/autodl-tmp/TRELLIS/TRELLIS-text-xlarge/ckpts/slat_flow_txt_dit_XL_64l8p2_fp16.safetensors
+
+checkpoint的替换：
+cp /root/autodl-tmp/TRELLIS/checkpoints/checkpoint_step_500.safetensors /root/autodl-tmp/TRELLIS/TRELLIS-text-xlarge/ckpts/slat_flow_txt_dit_XL_64l8p2_fp16.safetensors
+
+
+python /root/autodl-tmp/TRELLIS/trellis_generation.py
+复原：
+cd /root/autodl-tmp/TRELLIS/TRELLIS-text-xlarge/ckpts && cp slat_flow_txt_dit_XL_64l8p2_fp16.safetensors.backup slat_flow_txt_dit_XL_64l8p2_fp16.safetensors
+
+QQ授权码：nqrzujlmrlsdhcfe
+创建tmux会话：
+tmux new-session -d -s render_session 'cd /root/autodl-tmp/TRELLIS && python dataset_toolkits/render.py DPO_COMPAIR --output_dir datasets/DPO_COMPAIR'
+tmux new-session -d -s render_session_1000 'cd /root/autodl-tmp/TRELLIS && python dataset_toolkits/render.py DPO_COMPAIR_1000 --output_dir datasets/DPO_COMPAIR_1000'
+1.连接到会话查看实时输出：
+tmux attach-session -t render_session
+2.从会话中分离（不终止任务）：
+在会话内按 Ctrl + B，然后按 D
+3.查看会话输出（不进入会话）：
+tmux capture-pane -t render_session -p
+4.终止会话：
+tmux kill-session -t render_session
+修改当前的训练逻辑，参考/root/autodl-tmp/TRELLIS/trellis/pipelines/trellis_dpo_3d.py，输入的是图片，稀疏结构是采样出来的。
+tmux list-sessions
+
+
+检查渲染
+python analyze_renders.py 
+python delete_invalid_renders.py
+### 阶段一：数据准备与预处理
+
+#### 第一步：准备原始数据
+- **输入**：正负样本对的 mesh.glb 3D模型文件
+- **位置**：`/root/autodl-tmp/3DrewardDB/generated_meshes`
+
+#### 第二步：初始化数据集
+```bash
+python prepare_my_data.py
+```
+- **功能**：生成 metadata.csv 和 metadata.json 文件
+- **输出**：数据集的基础元数据文件，是后续步骤的基础
+
+#### 第三步：多视角渲染
+```bash
+python dataset_toolkits/render.py DPO_COMPAIR --output_dir datasets/DPO_COMPAIR
+```
+- **输入**：metadata对应的3D mesh模型
+- **输出**：
+  - 3D模型的多视角图片（默认150个视角）
+  - mesh.ply文件
+- **重要**：多视角图片数量直接影响后续特征提取的质量
+
+#### 第四步：修复元数据
+```bash
+python fix_metadata.py
+```
+- **功能**：修复metadata中的标签，确保格式符合build_metadata要求
+
+#### 第五步：更新元数据
+```bash
+python dataset_toolkits/build_metadata.py DPO_COMPAIR --output_dir datasets/DPO_COMPAIR
+```
+- **功能**：更新metadata记录
+
+### 阶段二：几何处理与特征提取
+
+#### 第六步：体素化
+```bash
+python dataset_toolkits/voxelize.py DPO_COMPAIR --output_dir datasets/DPO_COMPAIR
+```
+- **输入**：第三步渲染的mesh文件
+- **输出**：mesh文件的体素化文件
+
+#### 第七步：更新元数据
+```bash
+python dataset_toolkits/build_metadata.py DPO_COMPAIR --output_dir datasets/DPO_COMPAIR
+```
+
+#### 第八步：特征提取
+```bash
+python dataset_toolkits/extract_feature.py --output_dir datasets/DPO_COMPAIR
+```
+- **输入**：第三步的多视角图片和mesh.ply文件
+- **输出**：视觉特征文件
+- **技术**：使用DINOv2模型提取多视角特征
+
+#### 第九步：更新元数据
+```bash
+python dataset_toolkits/build_metadata.py DPO_COMPAIR --output_dir datasets/DPO_COMPAIR
+```
+
+### 阶段三：潜在表示编码
+
+#### 第十步：稀疏结构潜在编码
+```bash
+python dataset_toolkits/encode_ss_latent.py --output_dir datasets/DPO_COMPAIR
+```
+- **输入**：第六步生成的体素化数据
+- **输出**：ss_latent文件（sparse_structure_latent）
+
+#### 第十一步：更新元数据
+```bash
+python dataset_toolkits/build_metadata.py DPO_COMPAIR --output_dir datasets/DPO_COMPAIR
+```
+
+#### 第十二步：结构化潜在编码
+```bash
+python dataset_toolkits/encode_latent.py --output_dir datasets/DPO_COMPAIR
+```
+- **输入**：第八步生成的特征文件
+- **输出**：slat文件（Structured Latent）
+
+#### 第十三步：更新元数据
+```bash
+python dataset_toolkits/build_metadata.py DPO_COMPAIR --output_dir datasets/DPO_COMPAIR
+```
+
+### 阶段四：可选步骤
+
+#### 第十四步：条件渲染（可选）
+```bash
+python dataset_toolkits/render_cond.py DPO_COMPAIR --output_dir datasets/DPO_COMPAIR
+python dataset_toolkits/build_metadata.py DPO_COMPAIR --output_dir datasets/DPO_COMPAIR
+```
